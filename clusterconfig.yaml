@@ -1,0 +1,44 @@
+__default__:
+    h_data: 4G
+    h_rt: 6:00:0
+    threads: 1
+
+download_fq:
+    h_data: 8G
+    h_rt: 4:00:0
+    threads: 1
+
+star_map:
+    h_data: 11G
+    h_rt: 3:00:0,highp
+    threads: 3
+
+cutadapt:
+    h_data: 6G
+    h_rt: 12:00:0
+    threads: 1
+
+collapse_dup:
+    h_data: 24G
+    h_rt: 8:00:0
+    threads: 1
+
+clam_prep:
+    h_data: 16G
+    h_rt: 8:00:0
+    threads: 1
+
+clam_callpeak:
+    h_data: 8G
+    h_rt: 6:00:0
+    threads: 1
+
+clam_em:
+    h_data: 16G
+    h_rt: 6:00:0
+    threads: 1
+
+clam_callpeak_mread:
+    h_data: 8G
+    h_rt: 6:00:0
+    threads: 1

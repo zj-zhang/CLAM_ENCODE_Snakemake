@@ -1,0 +1,24 @@
+reads:
+    gzip: True
+    paired_end: True
+    rna_annot: /u/nobackup/yxing/NOBACKUP/frankwoe/CLAM_ENCODE-eCLIP_Snakemake/scripts/mask_rRNA/hg19_RNA_rep.bed
+
+sample_dict:
+    IP_rep1: [rep1]
+    IP_rep2: [rep2]
+    Inp_rep1: [rep1]
+
+genome: hg19
+
+clam:
+    max_tags: -1
+    sample_comparison:
+        rep1:
+            [["IP_rep1"], ["Inp_rep1"]]
+        rep2:
+            [["IP_rep2"], ["Inp_rep1"]]
+
+genome_build:
+    hg19:
+        star_idx: /u/nobackup/yxing/NOBACKUP/frankwoe/hg19/star_idx_gencode_v19
+        gtf: /u/nobackup/yxing/NOBACKUP/frankwoe/hg19/gencode.v19.annotation.gtf

@@ -1,0 +1,31 @@
+#!/bin/bash
+## Call cutadapt to trim potential adapters
+## Zijun Zhang
+## 3.5.2018
+r1=$1
+r2=$2
+echo "read_1: $r1"
+echo "read_2: $r2"
+echo "`date` trim start"
+cutadapt -f fastq --match-read-wildcards --times 1 -e 0.1 -O 1 --quality-cutoff 6 -m 18 \
+-a NNNNNAGATCGGAAGAGCACACGTCTGAACTCCAGTCAC -g CTTCCGATCTACAAGTT -g CTTCCGATCTTGGTCCT \
+-A AACTTGTAGATCGGA -A AGGACCAAGATCGGA -A ACTTGTAGATCGGAA -A GGACCAAGATCGGAA \
+-A CTTGTAGATCGGAAG -A GACCAAGATCGGAAG -A TTGTAGATCGGAAGA -A ACCAAGATCGGAAGA \
+-A TGTAGATCGGAAGAG -A CCAAGATCGGAAGAG -A GTAGATCGGAAGAGC -A CAAGATCGGAAGAGC \
+-A TAGATCGGAAGAGCG -A AAGATCGGAAGAGCG -A AGATCGGAAGAGCGT -A GATCGGAAGAGCGTC \
+-A ATCGGAAGAGCGTCG -A TCGGAAGAGCGTCGT -A CGGAAGAGCGTCGTG -A GGAAGAGCGTCGTGT \
+-o $r1.adapterTrim.fastq.gz -p $r2.adapterTrim.fastq.gz \
+$r1 $r2 > \
+$r1.adapterTrim.metrics 
+echo "`date` finish round 1"
+cutadapt -f fastq --match-read-wildcards --times 1 -e 0.1 -O 5 --quality-cutoff 6 -m 18 \
+-A AACTTGTAGATCGGA -A AGGACCAAGATCGGA \
+-A ACTTGTAGATCGGAA -A GGACCAAGATCGGAA -A CTTGTAGATCGGAAG -A GACCAAGATCGGAAG \
+-A TTGTAGATCGGAAGA -A ACCAAGATCGGAAGA -A TGTAGATCGGAAGAG \
+-A CCAAGATCGGAAGAG -A GTAGATCGGAAGAGC -A CAAGATCGGAAGAGC -A TAGATCGGAAGAGCG \
+-A AAGATCGGAAGAGCG -A AGATCGGAAGAGCGT -A GATCGGAAGAGCGTC \
+-A ATCGGAAGAGCGTCG -A TCGGAAGAGCGTCGT -A CGGAAGAGCGTCGTG -A GGAAGAGCGTCGTGT \
+-o $r1.adapterTrim.round2.fastq.gz -p $r2.adapterTrim.round2.fastq.gz \
+$r1.adapterTrim.fastq.gz $r2.adapterTrim.fastq.gz > \
+$r1.adapterTrim.round2.metrics 
+echo "`date` finish round 2"
