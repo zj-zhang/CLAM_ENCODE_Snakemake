@@ -2,12 +2,13 @@
 ## modified from CLAM evaluator back in 2016
 ## Zijun Zhang
 ## 11.6.2017
+## revised 6.25.2018: add `genome` to arguments
 
 import sys
 import subprocess
 import os
 
-# get auxillary scripts path
+# get helper scripts path
 cur_dir = os.path.dirname(os.path.realpath(__file__))
 # bam_script: clam_bam2bed.py aligner_out is_stranded +/-
 bam_script = os.path.join(cur_dir, 'clam_bam2bed.py')
@@ -18,7 +19,8 @@ bed_script = os.path.join(cur_dir, 'clam_bed2bedG.py')
 unique_bam = sys.argv[1]
 aligner_out = sys.argv[2]
 out_bg_dir = sys.argv[3]
-is_stranded = True if len(sys.argv)>=5 and sys.argv[4].lower().startswith('t') else False
+genome = sys.argv[4]
+is_stranded = True if len(sys.argv)>=6 and sys.argv[5].lower().startswith('t') else False
 verbose = True
 
 # make unique bedGraph
@@ -63,21 +65,25 @@ if is_stranded:
 	subprocess.call(cmd, shell=True)
 
 # convert combined bedGraph to BigWig
-cmd = 'bedGraphToBigWig ' + out_bg_dir + '/combined_pos.bdg /u/home/f/frankwoe/nobackup/programs/UCSC/hg19.chrom.sizes ' + out_bg_dir + '/combined_pos.bw'
+chrom_size_fn = os.path.join(os.path.dirname(cur_dir), 'UCSC', genome+'.chrom.sizes')
+
+cmd = 'bedGraphToBigWig ' + out_bg_dir + '/combined_pos.bdg ' + chrom_sizes_fn + ' ' + out_bg_dir + '/combined_pos.bw'
 if verbose: print cmd
 subprocess.call(cmd, shell=True)
 
-cmd = 'bedGraphToBigWig ' + out_bg_dir + '/combined_neg.bdg /u/home/f/frankwoe/nobackup/programs/UCSC/hg19.chrom.sizes ' + out_bg_dir + '/combined_neg.bw'
+cmd = 'bedGraphToBigWig ' + out_bg_dir + '/combined_neg.bdg ' + chrom_sizes_fn + ' ' + out_bg_dir + '/combined_neg.bw'
 if is_stranded:
 	if verbose: print cmd
 	subprocess.call(cmd, shell=True)
 
 # convert unique bedGraph to BigWig
-cmd = 'bedGraphToBigWig ' + out_bg_dir + '/unique_pos.bdg /u/home/f/frankwoe/nobackup/programs/UCSC/hg19.chrom.sizes ' + out_bg_dir + '/unique_pos.bw'
+cmd = 'bedGraphToBigWig ' + out_bg_dir + '/unique_pos.bdg ' + chrom_sizes_fn + ' ' + out_bg_dir + '/unique_pos.bw'
+if verbose: print(cmd)
 subprocess.call(cmd, shell=True)
 
-cmd = 'bedGraphToBigWig ' + out_bg_dir + '/unique_neg.bdg /u/home/f/frankwoe/nobackup/programs/UCSC/hg19.chrom.sizes ' + out_bg_dir + '/unique_neg.bw'
+cmd = 'bedGraphToBigWig ' + out_bg_dir + '/unique_neg.bdg ' + chrom_sizes_fn + ' ' + out_bg_dir + '/unique_neg.bw'
 if is_stranded:
+	if verbose: print(cmd)
 	subprocess.call(cmd, shell=True)
 
 # clean up

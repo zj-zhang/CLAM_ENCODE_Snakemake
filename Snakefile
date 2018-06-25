@@ -5,6 +5,8 @@ Author:
 	Zijun Zhang <zj.z@ucla.edu>
 Date: 
 	3.6.2018
+Histroy:
+	6.24.2018: update to general eCLIP
 """
 
 import os
@@ -31,11 +33,11 @@ def concat_star_fq(sample_name):
 ###**--- IN-FILE CONFIG ---**###
 	
 PROJECT = os.environ.get("PROJECT")
-#CONFIG_FP = os.path.join("projects", PROJECT, 'config', 'config.yaml')
+CONFIG_FP = os.path.join("projects", PROJECT, 'config', 'config.yaml')
 
 configfile: 
-	"config.template.yaml"
-	#CONFIG_FP
+	#"config.template.yaml"
+	CONFIG_FP
 
 GZIP = True if 'gzip' not in config['reads'] else config['reads']['gzip']
 PAIRED_END = False if 'paired_end' not in config['reads'] else config['reads']['paired_end']
@@ -368,6 +370,8 @@ rule make_bw:
 	output:
 		"projects/{project}/bigwig/{sample_name}/foo.txt"
 	params:
+		genome=GENOME,
+		is_stranded=False,
 		mbam="projects/{project}/clam/{sample_name}/realigned.sorted.bam",
 		ubam="projects/{project}/clam/{sample_name}/unique.sorted.collapsed.bam" if MAX_TAGS>0 else \
 			"projects/{project}/clam/{sample_name}/unique.sorted.bam",
@@ -376,7 +380,7 @@ rule make_bw:
 	shell:
 		"""
 mkdir -p {params.bw_dir}
-python2 {params.bw_script} {params.ubam} {params.mbam} {params.bw_dir}
+python2 {params.bw_script} {params.ubam} {params.mbam} {params.bw_dir} {params.genome} {params.is_stranded}
 echo "`date` done making bw" > {output}
 		"""
 
