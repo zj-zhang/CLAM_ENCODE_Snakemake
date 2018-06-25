@@ -384,6 +384,19 @@ python2 {params.bw_script} {params.ubam} {params.mbam} {params.bw_dir} {params.g
 echo "`date` done making bw" > {output}
 		"""
 
+rule make_peak_bb:
+	input:
+		unique_peak="",
+		combined_peak=""
+	output:
+		"projects/{project}/bigwig/{sample_name}/foo.txt"
+	params:
+		bedToBigBed="scripts/UCSC/bedToBigBed",
+		chrom_size="scripts/UCSC/%s.chrom.sizes",
+	shell:
+		"""
+		"""
+
 
 
 ### generating reports and cleaning up
