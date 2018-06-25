@@ -65,7 +65,7 @@ if is_stranded:
 	subprocess.call(cmd, shell=True)
 
 # convert combined bedGraph to BigWig
-chrom_size_fn = os.path.join(os.path.dirname(cur_dir), 'UCSC', genome+'.chrom.sizes')
+chrom_sizes_fn = os.path.join(os.path.dirname(cur_dir), 'UCSC', genome+'.chrom.sizes')
 
 cmd = 'bedGraphToBigWig ' + out_bg_dir + '/combined_pos.bdg ' + chrom_sizes_fn + ' ' + out_bg_dir + '/combined_pos.bw'
 if verbose: print cmd
