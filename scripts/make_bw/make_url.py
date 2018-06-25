@@ -19,12 +19,13 @@ child_dir = 'zijun/custom_tracks/20180625_GI_ESRP-CLIP_FGC1862/'
 tracks = os.listdir('/u/nobackup/yxing/NOBACKUP/frankwoe/RussCarstens_Lab/eclip/CLAM_ENCODE_Snakemake/projects/ESRP1_mm10_GI/bigwig')
 for track in tracks:
 	if 'peaks-' in track:
-		url = '/'.join([par_dir, child_dir, track, 'unique_peak.bb'])		
+		url = '/'.join([par_dir, child_dir, track, 'unique_peak.bb'])
+		s1 = "track name='{0}' bigDataUrl={1} type=bigBed visibility=2".format(track_name, url)
 	else:
 		url = '/'.join([par_dir, child_dir, track, 'unique_pos.bw'])
-	#track_name = track_name_dict[track]
-	track_name = track
-	s1 = "track name='{0}' bigDataUrl={1} type=bigWig visibility=2".format(track_name, url)
-	print s1
+		#track_name = track_name_dict[track]
+		track_name = track
+		s1 = "track name='{0}' bigDataUrl={1} type=bigWig visibility=2".format(track_name, url)
+	print(s1)
 
 
