@@ -396,7 +396,7 @@ rule make_peak_bb:
 		sorted_unique="projects/{project}/bigwig/peaks-{comparison}/unique.sorted.bed",
 		sorted_combined="projects/{project}/bigwig/peaks-{comparison}/combined.sorted.bed",
 		bedToBigBed="scripts/UCSC/bedToBigBed",
-		chrom_size="scripts/UCSC/%s.chrom.sizes",
+		chrom_size="scripts/UCSC/%s.chrom.sizes"%GENOME,
 	shell:
 		"""
 mkdir -p {params.outdir}
