@@ -74,12 +74,12 @@ rule all:
 			# project=PROJECT, comparison=x) for x in config['clam']['sample_comparison']
 		# ],
 		# compare peaks
-		["projects/{project}/clam/peaks-{comparison}/peak_num.png".format(
-			project=PROJECT, comparison=x) for x in config['clam']['sample_comparison']
-		],
+		#["projects/{project}/clam/peaks-{comparison}/peak_num.png".format(
+		#	project=PROJECT, comparison=x) for x in config['clam']['sample_comparison']
+		#],
 		# homer
-		expand(["projects/{project}/homer/{comparison}/clam_unique/homerResults.html","projects/{project}/homer/{comparison}/clam_rescue/homerResults.html"],
-			project=PROJECT, comparison=COMPARISON_LIST),
+		#expand(["projects/{project}/homer/{comparison}/clam_unique/homerResults.html","projects/{project}/homer/{comparison}/clam_rescue/homerResults.html"],
+		#	project=PROJECT, comparison=COMPARISON_LIST),
 		# archive
 		"projects/{project}/archive/{project}.tar.gz".format(project=PROJECT)
 
