@@ -265,13 +265,14 @@ rule clam_callpeak_mread:
 		binsize=50,
 		qval_cutoff=0.05,
 		fold_change='0.69',  # log(2)
-		threads=4
+		threads=4,
+		pool = lambda wildcards: config['clam']['sample_comparison'][wildcards.comparison][2] if len(config['clam']['sample_comparison'][wildcards.comparison])>2 else '',
 	shell:
 		"""
 CLAM peakcaller -i {params.ip_ubam} {params.ip_mbam} -c {params.con_ubam} {params.con_mbam} \
 -p {params.threads} \
 -o {params.outdir} --gtf {params.gtf} --binsize {params.binsize} \
---qval-cutoff 0.5 --fold-change 0.01 >{log} 2>&1
+--qval-cutoff 0.5 --fold-change 0.01 {params.pool} >{log} 2>&1
 mv {output} {output}.all
 awk '$9<{params.qval_cutoff} && $7>{params.fold_change}' {output}.all > {output}
 		"""
