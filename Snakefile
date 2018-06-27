@@ -430,16 +430,16 @@ rm {params.sorted_combined}
 
 rule merged_bw:
 	input:
-		group_bw_tracks = lambda wildcards: ["{project}/bigwig/{sample_name}/foo.txt".format(project=PROJECT, sample_name=x) for x in config['ucsc_tracks']['merge'][wildcards.group]]
+		group_bw_tracks = lambda wildcards: ["projects/{project}/bigwig/{sample_name}/foo.txt".format(project=PROJECT, sample_name=x) for x in config['ucsc_tracks']['merge'][wildcards.group]]
 	output:
-		"{project}/bigwig_merge/{group}/{group}.bw"
+		"projects/{project}/bigwig_merge/{group}/{group}.bw"
 	params:
 		script="scripts/merge_bw/merge_bw.py",
 		genome_index=GENOME,
-		group_bw_tracks = lambda wildcards: ["{project}/bigwig/{sample_name}/combined_pos.bw".format(project=PROJECT, sample_name=x) for x in config['ucsc_tracks']['merge'][wildcards.group]]
+		group_bw_tracks = lambda wildcards: ["projects/{project}/bigwig/{sample_name}/combined_pos.bw".format(project=PROJECT, sample_name=x) for x in config['ucsc_tracks']['merge'][wildcards.group]]
 	shell:
 		"""
-python {params.script} {output} {params.genome_index} {input}
+python {params.script} {output} {params.genome_index} {params.group_bw_tracks}
 		"""
 
 
@@ -523,7 +523,7 @@ rule archive:
 				for x in COMPARISON_LIST
 				],
 		# merged bigwig
-		merged_bws = ["{project}/bigwig_merge/{group}/{group}.bw".format(project=PROJECT, group=x) \
+		merged_bws = ["projects/{project}/bigwig_merge/{group}/{group}.bw".format(project=PROJECT, group=x) \
 			for x in config['ucsc_tracks']['merge']],
 		# report
 		report = "projects/{project}/reports/report_{project}.pdf".format(project=PROJECT),
