@@ -220,13 +220,14 @@ rule clam_callpeak:
 			ip_sample_name=config['clam']['sample_comparison'][wildcards.comparison][0] )),
 		control_bam = lambda wildcards: ','.join(expand("projects/{project}/clam/{con_sample_name}/unique.collapsed.sorted.bam" if MAX_TAGS>0 else "projects/{project}/clam/{con_sample_name}/unique.sorted.bam", 
 			project=PROJECT,
-			con_sample_name=config['clam']['sample_comparison'][wildcards.comparison][1] ))
+			con_sample_name=config['clam']['sample_comparison'][wildcards.comparison][1] )),
+		pool = lambda wildcards: config['clam']['sample_comparison'][wildcards.comparison][2] if len(config['clam']['sample_comparison'][wildcards.comparison])>2 else '',
 	shell:
 		"""
 CLAM peakcaller -i {params.ip_bam}  -c {params.control_bam} \
 -p {params.threads} \
 -o {params.outdir} --gtf {params.gtf} --unique-only --binsize {params.binsize} \
---qval-cutoff 0.5 --fold-change 0.01 >{log} 2>&1
+--qval-cutoff 0.5 --fold-change 0.01 {params.pool} >{log} 2>&1
 mv {output} {output}.all
 awk '$9<{params.qval_cutoff} && $7>{params.fold_change}' {output}.all > {output}
 		"""
