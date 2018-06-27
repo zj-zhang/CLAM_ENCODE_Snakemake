@@ -197,29 +197,32 @@ rule clam_em:
 rule clam_callpeak:
 	input:
 		ip_bam=lambda wildcards: 
-			expand("projects/{project}/clam/{ip_sample_name}/unique.sorted.bam", project=PROJECT,
+			expand("projects/{project}/clam/{ip_sample_name}/unique.collapsed.sorted.bam" if MAX_TAGS>0 else "projects/{project}/clam/{ip_sample_name}/unique.sorted.bam", 
+			project=PROJECT,
 			ip_sample_name=config['clam']['sample_comparison'][wildcards.comparison][0] ),
 		control_bam=lambda wildcards: 
-			expand("projects/{project}/clam/{con_sample_name}/unique.sorted.bam", project=PROJECT,
+			expand("projects/{project}/clam/{con_sample_name}/unique.collapsed.sorted.bam" if MAX_TAGS>0 else "projects/{project}/clam/{con_sample_name}/unique.sorted.bam", 
+			project=PROJECT,
 			con_sample_name=config['clam']['sample_comparison'][wildcards.comparison][1] )
 	output:
 		"projects/{project}/clam/peaks-{comparison}/narrow_peak.unique.bed"
 	log:
 		"projects/{project}/logs/clam/{comparison}-callpeak.log"
 	params:
-		outdir="projects/{project}/clam/peaks-{comparison}",
-		gtf=config['genome_build'][GENOME]['gtf'],
-		binsize=50,
-		qval_cutoff=0.05,
-		fold_change='0.69',  # log(2)
-		threads=4
-		
+		outdir = "projects/{project}/clam/peaks-{comparison}",
+		gtf = config['genome_build'][GENOME]['gtf'],
+		binsize = 50,
+		qval_cutoff = 0.05,
+		fold_change = '0.69',  # log(2)
+		threads = 4,
+		ip_bam = ','.join(input.ip_bam),
+		control_bam = ','.join(input.control_bam)
 	shell:
 		"""
-CLAM peakcaller -i {input.ip_bam}  -c {input.control_bam} \
+CLAM peakcaller -i {params.ip_bam}  -c {params.control_bam} \
 -p {params.threads} \
 -o {params.outdir} --gtf {params.gtf} --unique-only --binsize {params.binsize} \
---qval-cutoff 0.1 --fold-change 0.01 >{log} 2>&1
+--qval-cutoff 0.5 --fold-change 0.01 >{log} 2>&1
 mv {output} {output}.all
 awk '$9<{params.qval_cutoff} && $7>{params.fold_change}' {output}.all > {output}
 		"""
@@ -240,6 +243,10 @@ rule clam_callpeak_mread:
 	log:
 		"projects/{project}/logs/clam/{comparison}-callpeak_mread.log"
 	params:
+		ip_ubam = ','.join([x[0] for x in input.ip_bam]),
+		ip_mbam = ','.join([x[1] for x in input.ip_bam]),
+		con_ubam = ','.join([x[0] for x in input.con_bam]),
+		con_mbam = ','.join([x[1] for x in input.con_bam]),
 		outdir="projects/{project}/clam/peaks-{comparison}",
 		gtf=config['genome_build'][GENOME]['gtf'],
 		binsize=50,
@@ -248,10 +255,10 @@ rule clam_callpeak_mread:
 		threads=4
 	shell:
 		"""
-CLAM peakcaller -i {input.ip_bam}  -c {input.con_bam} \
+CLAM peakcaller -i {params.ip_ubam} {params.ip_mbam} -c {params.con_ubam} {params.con_mbam} \
 -p {params.threads} \
 -o {params.outdir} --gtf {params.gtf} --binsize {params.binsize} \
---qval-cutoff 0.1 --fold-change 0.1 >{log} 2>&1
+--qval-cutoff 0.5 --fold-change 0.01 >{log} 2>&1
 mv {output} {output}.all
 awk '$9<{params.qval_cutoff} && $7>{params.fold_change}' {output}.all > {output}
 		"""
