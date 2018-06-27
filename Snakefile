@@ -428,6 +428,20 @@ LC_ALL=c sort -k1,1 -k2,2n {input.combined_peak} > {params.sorted_combined}
 rm {params.sorted_combined}
 		"""
 
+rule merged_bw:
+	input:
+		group_bw_tracks = lambda wildcards: ["{project}/bigwig/{sample_name}/foo.txt".format(project=PROJECT, sample_name=x) for x in config['ucsc_tracks']['merge'][wildcards.group]]
+	output:
+		"{project}/bigwig_merge/{group}/{group}.bw"
+	params:
+		script="scripts/merge_bw/merge_bw.py",
+		genome_index=GENOME,
+		group_bw_tracks = lambda wildcards: ["{project}/bigwig/{sample_name}/combined_pos.bw".format(project=PROJECT, sample_name=x) for x in config['ucsc_tracks']['merge'][wildcards.group]]
+	shell:
+		"""
+python {params.script} {output} {params.genome_index} {input}
+		"""
+
 
 
 ### generating reports and cleaning up
@@ -493,11 +507,13 @@ rule report:
 
 rule archive:
 	input:
+		# clam peak-calling
 		clam_peak = [
 			"projects/{project}/clam/peaks-{comparison}/narrow_peak.unique.bed".format( 
 				project=PROJECT, comparison=x)
 				for x in COMPARISON_LIST
 				],
+		# bigwig coverage and peak bigbed
 		bigwig = [ "projects/{project}/bigwig/{sample_name}/foo.txt".format(
 				project=PROJECT, sample_name=x )
 				for x in config['sample_dict']
@@ -506,6 +522,10 @@ rule archive:
 				project=PROJECT, comparison=x)
 				for x in COMPARISON_LIST
 				],
+		# merged bigwig
+		merged_bws = ["{project}/bigwig_merge/{group}/{group}.bw".format(project=PROJECT, group=x) \
+			for x in config['ucsc_tracks']['merge']],
+		# report
 		report = "projects/{project}/reports/report_{project}.pdf".format(project=PROJECT),
 	output:
 		"projects/{project}/archive/{project}.tar.gz".format(project=PROJECT)

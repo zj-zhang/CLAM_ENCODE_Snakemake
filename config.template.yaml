@@ -18,6 +18,11 @@ clam:
         rep2:
             [["IP_rep2"], ["Inp_rep1"]]
 
+ucsc_tracks:
+    merge:
+        CLIP: ['IP_rep1', 'IP_rep2']
+        SMInput: ['Inp_rep1']
+
 genome_build:
     hg19:
         star_idx: /u/nobackup/yxing/NOBACKUP/frankwoe/hg19/star_idx_gencode_v19
