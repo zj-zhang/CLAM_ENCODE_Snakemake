@@ -215,8 +215,12 @@ rule clam_callpeak:
 		qval_cutoff = 0.05,
 		fold_change = '0.69',  # log(2)
 		threads = 4,
-		ip_bam = ','.join(input.ip_bam),
-		control_bam = ','.join(input.control_bam)
+		ip_bam = lambda wildcards: ','.join(expand("projects/{project}/clam/{ip_sample_name}/unique.collapsed.sorted.bam" if MAX_TAGS>0 else "projects/{project}/clam/{ip_sample_name}/unique.sorted.bam", 
+			project=PROJECT,
+			ip_sample_name=config['clam']['sample_comparison'][wildcards.comparison][0] )),
+		control_bam = lambda wildcards: ','.join(expand("projects/{project}/clam/{con_sample_name}/unique.collapsed.sorted.bam" if MAX_TAGS>0 else "projects/{project}/clam/{con_sample_name}/unique.sorted.bam", 
+			project=PROJECT,
+			con_sample_name=config['clam']['sample_comparison'][wildcards.comparison][1] ))
 	shell:
 		"""
 CLAM peakcaller -i {params.ip_bam}  -c {params.control_bam} \
@@ -243,10 +247,18 @@ rule clam_callpeak_mread:
 	log:
 		"projects/{project}/logs/clam/{comparison}-callpeak_mread.log"
 	params:
-		ip_ubam = ','.join([x[0] for x in input.ip_bam]),
-		ip_mbam = ','.join([x[1] for x in input.ip_bam]),
-		con_ubam = ','.join([x[0] for x in input.con_bam]),
-		con_mbam = ','.join([x[1] for x in input.con_bam]),
+		ip_ubam = lambda wildcards: ','.join(expand(
+			"projects/{project}/clam/{ip_sample_name}/unique.collapsed.sorted.bam" if MAX_TAGS>0 else "projects/{project}/clam/{ip_sample_name}/unique.sorted.bam", 
+			project=PROJECT, ip_sample_name=config['clam']['sample_comparison'][wildcards.comparison][0])),
+		ip_mbam = lambda wildcards: ','.join(expand(
+			"projects/{project}/clam/{ip_sample_name}/realigned.sorted.bam",
+			project=PROJECT, ip_sample_name=config['clam']['sample_comparison'][wildcards.comparison][0])),
+		con_ubam = lambda wildcards: ','.join(expand(
+			"projects/{project}/clam/{con_sample_name}/unique.sorted.collapsed.bam" if MAX_TAGS>0 else "projects/{project}/clam/{con_sample_name}/unique.sorted.bam", 
+			project=PROJECT, con_sample_name=config['clam']['sample_comparison'][wildcards.comparison][1])),
+		con_mbam = lambda wildcards: ','.join(expand(
+			"projects/{project}/clam/{con_sample_name}/realigned.sorted.bam",
+			project=PROJECT, con_sample_name=config['clam']['sample_comparison'][wildcards.comparison][1])),
 		outdir="projects/{project}/clam/peaks-{comparison}",
 		gtf=config['genome_build'][GENOME]['gtf'],
 		binsize=50,
