@@ -127,6 +127,7 @@ rule star_map:
 STAR --genomeDir {params.index} \
 --readFilesIn {params.fq_input}  --outSAMtype BAM Unsorted \
 --outFileNamePrefix {params.prefix} \
+--alignEndsProtrude 15 ConcordantPair \
 --outFilterMultimapNmax {params.max_hits} \
 --runThreadN 4 \
 {params.fq_cmd} 
