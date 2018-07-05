@@ -118,8 +118,8 @@ def generate_report(comparison_dict, pardir, outfn, project_name, include_mread_
 		]
 	#*--- EVALUATION FOR EACH IP-CON COMPARISON ---*	
 	for x in comparison_dict:
-		ip_sample = comparison_dict[x][0][0]
-		con_sample = comparison_dict[x][1][0]
+		ip_sample = comparison_dict[x][0]
+		con_sample = comparison_dict[x][1]
 		html_str += '<hr>\n'
 		#comparison = "{ip_sample}-{con_sample}".format(ip_sample=ip_sample, con_sample=con_sample)
 		comparison = x
@@ -140,7 +140,7 @@ def generate_report(comparison_dict, pardir, outfn, project_name, include_mread_
 		html_str += '<h2>%s</h2>\n'%comparison
 		# summary stats
 		html_str += '<h3>Summary statistics</h3>\n'
-		html_str += stats_df.loc[[ip_sample, con_sample]].to_html(border=1, index=False)
+		html_str += stats_df.loc[ip_sample+con_sample].to_html(border=1, index=False)
 		html_str += '<img src="%s" />\n'%peak_num_img
 		html_str += '<br>\n'
 		# homer motifs
