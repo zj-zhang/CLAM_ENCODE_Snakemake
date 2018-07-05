@@ -97,8 +97,8 @@ def read_project_mapping_stats(ip_sample_list, con_sample_list, project_name):
 
 
 def generate_report(comparison_dict, pardir, outfn, project_name, include_mread_analysis=True):
-	ip_sample_list = list(set([comparison_dict[x][0][0] for x in comparison_dict]))
-	con_sample_list = list(set([comparison_dict[x][1][0] for x in comparison_dict]))
+	ip_sample_list = list(set([y for x in comparison_dict for y in comparison_dict[x][0]]))
+	con_sample_list = list(set([y for x in comparison_dict for y in comparison_dict[x][1]]))
 	
 	html_str = '<html><head><title>Evaluation of Project "%s"</title></head>\n'%project_name
 	html_str += '<body>\n'
@@ -118,8 +118,8 @@ def generate_report(comparison_dict, pardir, outfn, project_name, include_mread_
 		]
 	#*--- EVALUATION FOR EACH IP-CON COMPARISON ---*	
 	for x in comparison_dict:
-		ip_sample = comparison_dict[x][0]
-		con_sample = comparison_dict[x][1]
+		ip_sample = list(comparison_dict[x][0])
+		con_sample = list(comparison_dict[x][1])
 		html_str += '<hr>\n'
 		#comparison = "{ip_sample}-{con_sample}".format(ip_sample=ip_sample, con_sample=con_sample)
 		comparison = x
