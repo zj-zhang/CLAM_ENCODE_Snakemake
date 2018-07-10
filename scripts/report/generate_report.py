@@ -58,6 +58,7 @@ def read_star_mapping_stats(fn):
 	stats['Number of UMI'] = 0
 	stats['Removed UMI'] = 0
 	with open(dup_fn, 'r') as f:
+		f.readline()
 		for line in f:
 			ele = line.strip().split()
 			stats['Number of UMI'] += int(ele[1])
