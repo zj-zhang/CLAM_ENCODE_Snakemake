@@ -53,6 +53,15 @@ def read_star_mapping_stats(fn):
 			ele=[x.strip() for x in line.strip().split('|')]
 			if ele[0] in stats_list:
 				stats[ele[0]] = ele[1]
+	## added for eCLIP; 2018.7.10
+	dup_fn = os.path.join(os.path.dirname(fn), 'dup_removal.metrics.txt')
+	stats['Number of UMI'] = 0
+	stats['Removed UMI'] = 0
+	with open(dup_fn, 'r') as f:
+		for line in f:
+			ele = line.strip().split()
+			stats['Number of UMI'] += int(ele[1])
+			stats['Removed UMI'] += int(ele[2])
 	return stats
 
 
@@ -65,7 +74,10 @@ def read_project_mapping_stats(ip_sample_list, con_sample_list, project_name):
 		'% of reads mapped to multiple loci',
 		'Number of splices: Total',
 		'Number of splice junction reads',
-		'Number of exon reads'
+		'Number of exon reads',
+		# Added for eCLIP; 2018.7.10
+		'Number of UMI',
+		'Removed UMI'
 		]
 	stats_df = pd.DataFrame(columns=target_col)
 	tmp = []
