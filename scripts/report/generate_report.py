@@ -91,6 +91,15 @@ def read_project_mapping_stats(ip_sample_list, con_sample_list, project_name):
 				except:
 					continue
 				this_dict[key] = val
+		dup_fn = os.path.join('projects', project_name, 'star', ip_sample, 'dup_removal.metrics.txt')
+		this_dict['Number of UMI'] = 0
+		this_dict['Removed UMI'] = 0
+		with open(dup_fn, 'r') as f:
+			f.readline()
+			for line in f:
+				ele = line.strip().split()
+				this_dict['Number of UMI'] += int(ele[1])
+				this_dict['Removed UMI'] += int(ele[2])
 		tmp.append(this_dict)
 	for con_sample in con_sample_list:
 		this_dict = {'Sample': con_sample, 'Type':'Con'}
@@ -101,6 +110,15 @@ def read_project_mapping_stats(ip_sample_list, con_sample_list, project_name):
 				except:
 					continue
 				this_dict[key] = val
+		dup_fn = os.path.join('projects', project_name, 'star', con_sample, 'dup_removal.metrics.txt')
+		this_dict['Number of UMI'] = 0
+		this_dict['Removed UMI'] = 0
+		with open(dup_fn, 'r') as f:
+			f.readline()
+			for line in f:
+				ele = line.strip().split()
+				this_dict['Number of UMI'] += int(ele[1])
+				this_dict['Removed UMI'] += int(ele[2])
 		tmp.append(this_dict)
 	stats_df = stats_df.append(tmp, ignore_index=True)
 	stats_df = stats_df[target_col]
