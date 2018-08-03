@@ -445,6 +445,21 @@ python {params.script} {output} {params.genome_index} {params.group_bw_tracks}
 		"""
 
 
+rule plot_distr:
+	input:
+		unique_peak="projects/{project}/clam/peaks-{comparison}/narrow_peak.unique.bed",
+		combined_peak="projects/{project}/clam/peaks-{comparison}/narrow_peak.combined.bed"
+	output:
+		"projects/{project}/distr/{comparison}/distr.txt"
+	params:
+		script="scripts/parseGTFregions/intersect_regions.py",
+		genome=GENOME
+	shell:
+		"""
+python {params.script} {input.unique_peak} {params.genome} {output}
+		"""
+
+
 
 ### generating reports and cleaning up
 
@@ -493,6 +508,12 @@ rule report:
 		# require rescued repeats
 		[ "projects/{project}/repeats/{comparison}/clam_rescue/dist.png".format(
 			project=PROJECT, 
+			comparison=x )
+			for x in COMPARISON_LIST
+		],
+		# require topology distr
+		[ "projects/{project}/distr/{comparison}/distr.txt".format(
+			project=PROJECT,
 			comparison=x )
 			for x in COMPARISON_LIST
 		],
