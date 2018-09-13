@@ -9,6 +9,7 @@ import os
 import pybedtools
 import matplotlib.pyplot as plt
 import pandas as pd
+from collections import defaultdict
 
 ### input arguments
 peak_fp, genome, outfn = sys.argv[1], sys.argv[2], sys.argv[3]
@@ -45,7 +46,10 @@ category_list = ['3UTR', '5UTR', 'CDS', 'other_exon', "px200_intron", "px500_int
 ### compute counts and length-normalized counts
 len_dict = {x:get_total_length(target[x]) for x in category_list}
 
-count_dict = {x: (peaks+target[x]).count() for x in category_list}
+#count_dict = {x: (peaks+target[x]).count() for x in category_list}
+intersect_handler_dict = {x: (peaks+target[x]) for x in category_list}
+count_dict = {x: intersect_handler_dict[x].count() for x in category_list}
+
 
 count_df = pd.DataFrame({
 	'category':category_list, 
@@ -72,3 +76,14 @@ plt.xticks(rotation=45)
 fig.savefig(outfn.rstrip('txt')+'png')
 plt.close()
 
+### output the annotations
+annot_fn = outfn+'.annot'
+annot_dict = defaultdict(list)
+for x in intersect_handler_dict:
+	for peak in intersect_handler_dict[x]:
+		# chrom, start, end, gene, strand
+		annot_dict[(peak[0], peak[1], peak[2], peak[3], peak[5])].append(x)
+
+with open(annot_fn, 'w') as fo:
+	for peak in annot_dict:
+		fo.write("\t".join(peak)+'\t'+','.join(annot_dict[peak])+'\n')

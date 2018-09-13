@@ -448,15 +448,17 @@ python {params.script} {output} {params.genome_index} {params.group_bw_tracks}
 rule plot_distr:
 	input:
 		unique_peak="projects/{project}/clam/peaks-{comparison}/narrow_peak.unique.bed",
-		combined_peak="projects/{project}/clam/peaks-{comparison}/narrow_peak.combined.bed"
+		rescued_peak="projects/{project}/clam/peaks-{comparison}/narrow_peak.rescue.bed"
 	output:
-		"projects/{project}/distr/{comparison}/distr.txt"
+		unique_img="projects/{project}/distr/{comparison}/unique_distr.txt",
+		rescued_img="projects/{project}/distr/{comparison}/rescued_distr.txt"
 	params:
-		script="scripts/parseGTFregions/intersect_regions.py",
+		script="scripts/GTF_annot_regions/intersect_regions.py",
 		genome=GENOME
 	shell:
 		"""
-python {params.script} {input.unique_peak} {params.genome} {output}
+python {params.script} {input.unique_peak} {params.genome} {output.unique_img}
+python {params.script} {input.rescued_peak} {params.genome} {output.rescued_img}
 		"""
 
 
@@ -512,7 +514,7 @@ rule report:
 			for x in COMPARISON_LIST
 		],
 		# require topology distr
-		[ "projects/{project}/distr/{comparison}/distr.txt".format(
+		[ "projects/{project}/distr/{comparison}/unique_distr.txt".format(
 			project=PROJECT,
 			comparison=x )
 			for x in COMPARISON_LIST
