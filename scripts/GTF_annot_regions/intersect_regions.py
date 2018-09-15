@@ -7,6 +7,8 @@ Zijun Zhang
 import sys
 import os
 import pybedtools
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import pandas as pd
 from collections import defaultdict
