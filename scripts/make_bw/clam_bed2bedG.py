@@ -22,16 +22,30 @@ def write_out(chr, interval, score):
 		if score[i] == out_score:
 			right += 1
 		else:
-			print '\t'.join([chr, str(left), str(right), str(out_score)])
+			print('\t'.join([chr, str(left), str(right), str(out_score)]))
 			left = right
 			right = left + 1
 			out_score = score[i]
-	print '\t'.join([chr, str(left), str(right), str(out_score)])
+		if right >= interval[1]:
+				break
+	if left!=right:
+		print('\t'.join([chr, str(left), str(right), str(out_score)]))
+
+
+def read_chrom_sizes(fn):
+	chrom_sizes = {}
+	with open(fn, 'r') as f:
+		for line in f:
+			chrom, size = line.strip().split()
+			chrom_sizes[chrom] = int(size)
+	return chrom_sizes
 
 if __name__ == '__main__':
-	score_column = int(sys.argv[1]) or None
+	chrom_sizes_fn = sys.argv[1]
+	score_column = int(sys.argv[2]) or None
 
 	init_flag = True
+	chrom_sizes =read_chrom_sizes(chrom_sizes_fn)
 
 	for line in sys.stdin:
 		line = line.rstrip()
@@ -43,18 +57,39 @@ if __name__ == '__main__':
 			init_flag = False
 			continue
 		if chr == last_chr and start < last_interval[1]:
-			this_interval = [last_interval[0], start]
-			this_score = last_score[ 0 : (start-last_interval[0]) ]
-			write_out(chr, this_interval, this_score)
-			
 			next_interval = [start, max(end, last_interval[1]) ]
 			next_score = pile_up(last_score[ (start-last_interval[0]):: ], [score] * (end - start))
+			
+			this_interval = [last_interval[0], start]
+			this_score = last_score[ 0 : (start-last_interval[0]) ]
+			
+			if this_interval[0] > chrom_sizes[chr]-2:
+				print('1', last_chr, this_interval, file=sys.stderr)
+				this_interval[0] = chrom_sizes[chr]-2
+			if this_interval[1] > chrom_sizes[chr]-1:
+				print('1', last_chr, this_interval, file=sys.stderr)
+				this_interval[1] = chrom_sizes[chr]-1
+
+			write_out(chr, this_interval, this_score)
 			
 			last_interval = next_interval
 			last_score = next_score
 		else:
+			if last_interval[0] > chrom_sizes[last_chr]-2:
+				print('2', last_chr, last_interval, file=sys.stderr)
+				last_interval[0] = chrom_sizes[last_chr]-2
+			if last_interval[1] > chrom_sizes[last_chr]-1:
+				print('2', last_chr, last_interval, file=sys.stderr)
+				last_interval[1] = chrom_sizes[last_chr]-1
 			write_out(last_chr, last_interval, last_score)
 			last_chr, last_interval, last_score = init(chr, start, end, score)
 			continue
+
+	if last_interval[0] > chrom_sizes[last_chr]-2:
+		print('3', last_chr, last_interval, file=sys.stderr)
+		last_interval[0] = chrom_sizes[last_chr]-2
+	if last_interval[1] > chrom_sizes[last_chr]-1:
+		print('3', last_chr, last_interval, file=sys.stderr)
+		last_interval[1] = chrom_sizes[last_chr]-1
 	write_out(last_chr, last_interval, last_score)
 			

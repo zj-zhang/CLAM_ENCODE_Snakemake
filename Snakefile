@@ -73,6 +73,15 @@ rule all:
 		# ["projects/{project}/clam/peaks-{comparison}/narrow_peak.combined.bed".format(
 			# project=PROJECT, comparison=x) for x in config['clam']['sample_comparison']
 		# ],
+		# piranha peaks
+		["projects/{project}/homer/{comparison}/piranha/homerResults.html".format(
+			 project=PROJECT, comparison=x) for x in config['piranha']['sample_comparison']
+		],
+		# macs2 peaks
+		#["projects/{project}/homer/{comparison}/macs2/homerResults.html".format(
+		#	 project=PROJECT, comparison=x) for x in config['macs2']['sample_comparison']
+		#],
+
 		# compare peaks
 		#["projects/{project}/clam/peaks-{comparison}/peak_num.png".format(
 		#	project=PROJECT, comparison=x) for x in config['clam']['sample_comparison']
@@ -151,12 +160,13 @@ rule collapse_dup:
 	output:
 		"projects/{project}/star/{sample_name}/Aligned.out.mask_rRNA.dup_removed.r2.bam"
 	params:
+	        python2 = config['progs']['python2'],
 		star_bam="projects/{project}/star/{sample_name}/Aligned.out.bam",
 		metric_file="projects/{project}/star/{sample_name}/dup_removal.metrics.txt",
 		collapse_script="scripts/collapse_pcr/collapse_duplicates.py"
 	shell:
 		"""
-python2 scripts/collapse_pcr/collapse_duplicates.py -b {input} -o {output} -m {params.metric_file}
+{params.python2} scripts/collapse_pcr/collapse_duplicates.py -b {input} -o {output} -m {params.metric_file}
 rm {input} {params.star_bam}
 		"""
 
@@ -215,7 +225,7 @@ rule clam_callpeak:
 		binsize = 50,
 		qval_cutoff = 0.05,
 		fold_change = '0.69',  # log(2)
-		threads = 4,
+		threads = 6,
 		ip_bam = lambda wildcards: ','.join(expand("projects/{project}/clam/{ip_sample_name}/unique.collapsed.sorted.bam" if MAX_TAGS>0 else "projects/{project}/clam/{ip_sample_name}/unique.sorted.bam", 
 			project=PROJECT,
 			ip_sample_name=config['clam']['sample_comparison'][wildcards.comparison][0] )),
@@ -223,12 +233,14 @@ rule clam_callpeak:
 			project=PROJECT,
 			con_sample_name=config['clam']['sample_comparison'][wildcards.comparison][1] )),
 		pool = lambda wildcards: config['clam']['sample_comparison'][wildcards.comparison][2] if len(config['clam']['sample_comparison'][wildcards.comparison])>2 else '',
+		#norm_method = '--normalize-lib'
+		norm_method = ''
 	shell:
 		"""
 CLAM peakcaller -i {params.ip_bam}  -c {params.control_bam} \
 -p {params.threads} \
 -o {params.outdir} --gtf {params.gtf} --unique-only --binsize {params.binsize} \
---qval-cutoff 0.5 --fold-change 0.01 {params.pool} >{log} 2>&1
+--qval-cutoff 0.5 --fold-change 0.01 {params.pool} {params.norm_method} >{log} 2>&1
 mv {output} {output}.all
 awk '$9<{params.qval_cutoff} && $7>{params.fold_change}' {output}.all > {output}
 		"""
@@ -268,12 +280,14 @@ rule clam_callpeak_mread:
 		fold_change='0.69',  # log(2)
 		threads=4,
 		pool = lambda wildcards: config['clam']['sample_comparison'][wildcards.comparison][2] if len(config['clam']['sample_comparison'][wildcards.comparison])>2 else '',
+		#norm_method = '--normalize-lib'
+		norm_method = ''
 	shell:
 		"""
 CLAM peakcaller -i {params.ip_ubam} {params.ip_mbam} -c {params.con_ubam} {params.con_mbam} \
 -p {params.threads} \
 -o {params.outdir} --gtf {params.gtf} --binsize {params.binsize} \
---qval-cutoff 0.5 --fold-change 0.01 {params.pool} >{log} 2>&1
+--qval-cutoff 0.5 --fold-change 0.01 {params.pool} {params.norm_method} >{log} 2>&1
 mv {output} {output}.all
 awk '$9<{params.qval_cutoff} && $7>{params.fold_change}' {output}.all > {output}
 		"""
@@ -291,23 +305,72 @@ rule clipper:
 samtools index {input}
 clipper -b {input} -p {params.threads} -s {params.genome} -o {output}
 		"""
-		
+
+
+rule piranha:
+	input:
+		ip_bam= lambda wildcards: "projects/{project}/star/{ip_sample_name}/Aligned.out.mask_rRNA.dup_removed.r2.bam".format(
+			project=PROJECT, ip_sample_name=config['piranha']['sample_comparison'][wildcards.comparison][0]), 
+		con_bam= lambda wildcards: "projects/{project}/star/{con_sample_name}/Aligned.out.mask_rRNA.dup_removed.r2.bam".format(
+			project=PROJECT, con_sample_name=config['piranha']['sample_comparison'][wildcards.comparison][1])
+	output:
+		"projects/{project}/piranha/{comparison}/piranha_out.bed"
+	params:
+		ip_bed=lambda wildcards: "projects/{project}/piranha/{comparison}/{ip_sample_name}.bed".format(
+			project=PROJECT, comparison=wildcards.comparison, ip_sample_name=config['piranha']['sample_comparison'][wildcards.comparison][0]),
+		con_bed=lambda wildcards: "projects/{project}/piranha/{comparison}/{con_sample_name}.bed".format(
+			project=PROJECT, comparison=wildcards.comparison, con_sample_name=config['piranha']['sample_comparison'][wildcards.comparison][1]),
+		binsize=50,
+		p_threshold=0.05
+	log:
+		"projects/{project}/logs/piranha/{comparison}.log"
+	shell:
+		"""
+bedtools bamtobed -i {input.ip_bam} > {params.ip_bed}
+bedtools bamtobed -i {input.con_bam} > {params.con_bed}
+Piranha -p {params.p_threshold} -o {output} -z {params.binsize} -s {params.ip_bed} -l -v {params.con_bed} >{log} 2>&1
+		"""
+
+rule macs2:
+	input:
+		ip_bam= lambda wildcards: "projects/{project}/star/{ip_sample_name}/Aligned.out.mask_rRNA.dup_removed.r2.bam".format(
+			project=PROJECT, ip_sample_name=config['macs2']['sample_comparison'][wildcards.comparison][0]), 
+		con_bam= lambda wildcards: "projects/{project}/star/{con_sample_name}/Aligned.out.mask_rRNA.dup_removed.r2.bam".format(
+			project=PROJECT, con_sample_name=config['macs2']['sample_comparison'][wildcards.comparison][1])
+	output:
+		"projects/{project}/macs2/{comparison}/macs2--nomodel_peaks.narrowPeak"
+	log:
+		"projects/{project}/logs/macs2/{comparison}.log"
+	params:
+		genome_size="2.7e9",
+		name_="macs2",
+		extsize=50,
+		#fold_range="1 100",
+		q_cutoff=0.01,
+		outdir="projects/{project}/macs2/{comparison}"
+	shell:
+		"macs2 callpeak -g {params.genome_size} -t {input.ip_bam} -c {input.con_bam} -n {params.name_}" \
+		"--nomodel -q {params.q_cutoff} --extsize {params.extsize} --outdir {params.outdir} >{log} 2>&1"
+
 		
 rule compare_peaks:
 	input:
 		#clipper_peak="projects/{project}/clipper/{comparison}/clipper_out.bed",
 		clam_upeak="projects/{project}/clam/peaks-{comparison}/narrow_peak.unique.bed",
-		clam_mpeak="projects/{project}/clam/peaks-{comparison}/narrow_peak.combined.bed"
+		clam_mpeak="projects/{project}/clam/peaks-{comparison}/narrow_peak.combined.bed",
+		piranha_peak=lambda wildcards: "projects/{project}/piranha/{comparison}/piranha_out.bed".format(project=PROJECT, comparison=wildcards.comparison)
+			if wildcards.comparison in config['piranha']['sample_comparison'] else "projects/{project}/clam/peaks-{comparison}/narrow_peak.unique.bed"
 	output:
 		clam_rescued_peak="projects/{project}/clam/peaks-{comparison}/narrow_peak.rescue.bed",
-		plot_fn="projects/{project}/clam/peaks-{comparison}/peak_num.png"
+		plot_fn="projects/{project}/clam/peaks-{comparison}/peak_num.png",
 	params:
 		plot_script="scripts/report/plot_peak_num.R",
+		has_piranha=lambda wildcards: 1 if wildcards.comparison in config['piranha']['sample_comparison'] else 0
 	shell:
 		"""
 bedtools intersect -v -a {input.clam_mpeak} -b {input.clam_upeak} > {output.clam_rescued_peak}
-Rscript {params.plot_script} {input.clam_mpeak} {input.clam_upeak} {output.plot_fn}
-		"""
+Rscript {params.plot_script} {input.clam_mpeak} {input.clam_upeak} {input.piranha_peak} {output.plot_fn} {params.has_piranha}
+		"""	
 
 
 ### evaluations
@@ -384,6 +447,45 @@ rule repeat_comp_rescue:
 python2 {params.count_script} {input.peak_fn} {params.genome} >{params.outdir}/dist.data
 Rscript {params.plot_script} {params.outdir}/dist.data {output}
 		"""
+
+rule homer_motif_macs2:
+	input:
+		peak_fn="projects/{project}/macs2/{comparison}/macs2--nomodel_peaks.narrowPeak"
+	output:
+		"projects/{project}/homer/{comparison}/macs2/homerResults.html"
+	params:
+		outdir="projects/{project}/homer/{comparison}/macs2/",
+		motif_len='5,6,7',
+		genome=GENOME,
+		nthread=4,
+		size=100,
+		motif_num=10
+	log:
+		"projects/{project}/logs/homer/log.homer.{comparison}.macs2.txt"
+	shell:
+		"findMotifsGenome.pl {input.peak_fn} {params.genome} {params.outdir} "\
+		"-len {params.motif_len} "\
+		"-p {params.nthread} -size {params.size} -S {params.motif_num} >{log} 2>&1"
+
+
+rule homer_motif_piranha:
+	input:
+		peak_fn="projects/{project}/piranha/{comparison}/piranha_out.bed"
+	output:
+		"projects/{project}/homer/{comparison}/piranha/homerResults.html"
+	params:
+		outdir="projects/{project}/homer/{comparison}/piranha/",
+		motif_len='5,6,7',
+		genome=GENOME,
+		nthread=4,
+		size=100,
+		motif_num=10
+	log:
+		"projects/{project}/logs/homer/log.homer.{comparison}.piranha.txt"
+	shell:
+		"findMotifsGenome.pl {input.peak_fn} {params.genome} {params.outdir} "\
+		"-rna -len {params.motif_len} "\
+		"-p {params.nthread} -size {params.size} -S {params.motif_num} >{log} 2>&1"
 
 
 rule make_bw:

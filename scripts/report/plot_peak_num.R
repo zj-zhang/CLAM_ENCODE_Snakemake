@@ -11,12 +11,15 @@ print(argv)
 
 clam_mpeak = argv[1]
 clam_upeak = argv[2]
+piranha_peak = argv[3]
+outfn = argv[4]
+has_piranha = as.numeric(argv[5])
 
-peak_idx = c('CLAM_m', 'CLAM_u')
+peak_idx = c('CLAM_m', 'CLAM_u', 'Piranha')
 
 peak_df = data.frame(
-	x=c(rep('CLAM_m',2), rep('CLAM_u',2)),
-	y=rep(c('CLAM_m','CLAM_u'),2),
+	x=c(rep('CLAM_m',3), rep('CLAM_u',3), rep('Piranha',3)),
+	y=rep(c('CLAM_m','CLAM_u','Piranha'),3),
 	value=NA,
 	stringsAsFactors=F
 	)
@@ -25,6 +28,7 @@ for(i in 1:nrow(peak_df))
 {
 	p1 = which(peak_idx == peak_df$x[i])
 	p2 = which(peak_idx == peak_df$y[i])
+	if( !has_piranha && (p1==3 || p2==3) ) next
 	cmd = paste0('bedtools intersect -a ', argv[p1], ' -b ', argv[p2], ' -u | wc -l')
 	resp = system(cmd, intern=T)
 	peak_df$value[i] = as.numeric(resp)
@@ -39,4 +43,4 @@ p = ggplot(data=peak_df, aes(x=x, y=y)) +
 	theme_bw() +
 	theme(axis.text.x=element_text(size=9), axis.title=element_text(size=10), axis.text.y=element_text(size=9, angle = 90, hjust=0.5)) 
 	
-ggsave(argv[3], plot=p, width=2, height=2)
+ggsave(outfn, plot=p, width=2.5, height=2.5)

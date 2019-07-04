@@ -15,7 +15,13 @@ for read in bam:
 	if this_score=='0.0':
 		continue
 	this_strand = '-' if read.is_reverse else '+'
-	this_qlen = sum( [ x[1] for x in read.cigar if x[0]==0 ] )
+
+	## THIS IS CHANGED AS OF CLAM V1.2
+	#this_qlen = sum( [ x[1] for x in read.cigar if x[0]==0 ] )
+	if read.has_tag('RL'):
+		this_qlen = read.opt('RL')
+	else:
+		this_qlen = sum( [ x[1] for x in read.cigar if x[0]==0 ] )
 	line = "\t".join(
 		[chr_list[read.rname], 
 		str(read.positions[0]), 
@@ -24,8 +30,8 @@ for read in bam:
 		this_score])
 	if is_stranded:
 		if read.is_reverse==is_reverse:
-			print >> sys.stdout, line
+			print(line, file=sys.stdout)
 		else:
 			continue
 	else:
-		print >> sys.stdout, line
+		print(line, file=sys.stdout)
